@@ -10,14 +10,15 @@
   <div class="main">
     <div class="calculator">
       <div class="display">
-        <input type="text" id="top" value="1 + 2 =" disabled>
-        <input type="text" id="bottom" value="3" disabled>
+        <input type="text" class="gray" id="top" value="0 + 0 =" disabled>
+        <input type="text" id="bottom" value="0" disabled>
       </div>
   
       <div class="buttons">
         <div class="row">
-          <button class="function" id="ce">CE</button>
-          <button class="function" id="ac">AC</button>
+          <button class="function" id="ac" title="All Clear">AC</button>
+          <button class="function" id="ce" title="Clear Entry">CE</button>
+          <button class="function" id="c" title="backspace">⌫</button>
         </div>
   
         <div class="row">
@@ -56,79 +57,23 @@
         </div>
       </div>
     </div>
-  
     <div class="history">
       <div class="top">
+        <button class="trash">clear</button>
+      </div>
+
+      <div class="bottom">
         <ul class="list">
           <li class="item">
-            <p class="input">1 + 2 =</p>
+            <p class="input gray">1 + 2 =</p>
             <p class="output">3</p>
           </li>
   
           <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-          
-          <li class="item">
-            <p class="input">1 + 2 =</p>
+            <p class="input gray">1 + 2 =</p>
             <p class="output">3</p>
           </li>
         </ul>
-      </div>
-      
-      <div class="bottom">
-        <button class="trash">clear</button>
       </div>
     </div>
   </div>
