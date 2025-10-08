@@ -10,7 +10,7 @@
   <div class="main">
     <div class="calculator">
       <div class="display">
-        <input type="text" class="gray" id="top" value="0 + 0 =" disabled>
+        <input type="text" class="gray" id="top" value="" disabled>
         <input type="text" id="bottom" value="0" disabled>
       </div>
   
@@ -22,9 +22,9 @@
         </div>
   
         <div class="row">
-          <button class="operator" id="%">%</button>
-          <button class="operator" id="**">x²</button>
-          <button class="operator" id="√">√x</button>
+          <button class="operator" id="%" disabled>%</button>
+          <button class="operator" id="**" disabled>x²</button>
+          <button class="operator" id="√" disabled>√x</button>
           <button class="operator" id="/">÷</button>
         </div>
   
@@ -50,7 +50,7 @@
         </div>
   
         <div class="row">
-          <button class="number" id="toggle-negative">+/-</button>
+          <button class="function" id="toggle-negative">+/-</button>
           <button class="number" id="0">0</button>
           <button class="number" id=".">.</button>
           <button class="function" id="=">=</button>
@@ -58,22 +58,12 @@
       </div>
     </div>
     <div class="history">
-      <div class="top">
+      <div class="top" hidden>
         <button class="trash">clear</button>
       </div>
 
       <div class="bottom">
-        <ul class="list">
-          <li class="item">
-            <p class="input gray">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-  
-          <li class="item">
-            <p class="input gray">1 + 2 =</p>
-            <p class="output">3</p>
-          </li>
-        </ul>
+        <ul class="list"></ul>
       </div>
     </div>
   </div>
