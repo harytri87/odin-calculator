@@ -4,17 +4,23 @@ const btnCalculator = document.querySelector(".buttons");
 const btnHistoryClear = document.querySelector(".trash");
 
 const state = {
-  "a": null,
-  "b": null,
-  "operator": null,
-  "currentInput": null,
+  "a": null,  // string when first time assigned from currentInput, then becomes a number after operate()
+  "b": null,  // string (becomes null immediately after each operation)
+  "operator": null, // string
+  "currentInput": null, // string
+  // using null for easier if conditions
 };
 
 const methods = {
   "+": (a, b) => a + b,
   "-": (a, b) => a - b,
   "*": (a, b) => a * b,
-  "/": (a, b) => a / b,
+  "/": (a, b) => {
+    if (b === 0) {
+      return "Cannot divide by zero";
+    }
+    return a / b;
+  },
 };
 
 const operate = function (state) {
@@ -24,7 +30,8 @@ const operate = function (state) {
   return methods[state.operator](a, b);
 };
 
-const addHistory = function (output) {const topSection = document.querySelector(".top");
+const addHistory = function (output) {
+  const topSection = document.querySelector(".top");
   const list = document.querySelector(".list");
   const item = document.createElement("li");
 
@@ -58,7 +65,12 @@ const separateDisplayTop = function () {
   }
 
   return displayInput;
-}
+};
+
+const updateDisplay = function () {
+  displayTop.value = `${state.a} ${state.operator}`.replace(/null/g, "");
+  displayBottom.value = state.currentInput ?? "0";
+};
 
 const handleNumber = function (input) {
   if (state.a !== null && state.operator === null && state.currentInput === null) {
@@ -81,6 +93,9 @@ const handleNumber = function (input) {
     input :
     `${state.currentInput}${input}`.replace("null", "");
   }
+  // If the data type is a number, we can’t store the input as "0.123", it will always become ".123". Idk why.
+  // Also since the inputs behave more like string (typed digit by digit and concatenated),
+  // so we store them as strings anyway.
 
   displayBottom.value = state.currentInput;
 };
@@ -138,7 +153,6 @@ const handleFunction = function (input) {
       break;
       
     case "toggle-negative":
-      console.log(state);
       if (displayBottom.value !== "0") {
         if (state.a !== null && state.operator === null && state.currentInput === null) {
           // operate() was triggered by "=" and user immediately press the toggle
@@ -149,8 +163,29 @@ const handleFunction = function (input) {
         displayBottom.value = Number(displayBottom.value) * -1;
         state.currentInput = displayBottom.value
       }
-      console.log(state);
       break;
+
+      case "backspace":
+        if (state.currentInput && state.currentInput.length > 1) {
+          state.currentInput = state.currentInput.slice(0, -1);
+        } else {
+          state.currentInput = null;
+        }
+        updateDisplay();
+        break;
+
+      case "clear-entry":
+        state.currentInput = null;
+        updateDisplay();
+        break;
+
+      case "all-clear":
+        state.a = null;
+        state.b = null;
+        state.operator = null;
+        state.currentInput = null;
+        updateDisplay();
+        break;
   
     default:
       break;
@@ -169,4 +204,12 @@ btnCalculator.addEventListener("click", (event) => {
   } else if (target.matches(".function")) {
     handleFunction(target.id);
   }
+});
+
+btnHistoryClear.addEventListener("click", () => {
+  const topSection = document.querySelector(".top");
+  const list = document.querySelector(".list");
+  
+  list.replaceChildren();
+  topSection.hidden = true;
 });
