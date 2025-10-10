@@ -80,7 +80,8 @@ button:hover {
   background: #fff;
 }
 
-.operator {
+.operator,
+.other-operator {
   background: #e9e9e9;
 }
 

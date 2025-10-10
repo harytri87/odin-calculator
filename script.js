@@ -8,6 +8,8 @@ const state = {
   "b": null,  // string (becomes null immediately after each operation)
   "operator": null, // string
   "currentInput": null, // string
+  "tempSqrtA": null,  // string
+  "tempSqrtB": null,  // string
   // using null for easier if conditions
 };
 
@@ -21,21 +23,33 @@ const methods = {
     }
     return a / b;
   },
+  "**": (a, b) => a ** b,
 };
 
 const operate = function (state) {
   const a = Number(state.a);
   const b = Number(state.b);
 
+  state.tempSqrtA = null;
+  state.tempSqrtB = null;
   return methods[state.operator](a, b);
 };
 
-const addHistory = function (output) {
+const addHistory = function (output, tempSqrtA = null, tempSqrtB = null) {
   const topSection = document.querySelector(".top");
   const list = document.querySelector(".list");
   const item = document.createElement("li");
+  let displayInput = "";
 
-  let displayInput = separateDisplayTop();
+  if (tempSqrtA && tempSqrtB) {
+    displayInput = `${tempSqrtA} ${state.operator} ${tempSqrtB} =`;
+  } else if (tempSqrtA) {
+    displayInput = `${tempSqrtA} ${state.operator} ${state.b} =`;
+  } else if (tempSqrtB) {
+    displayInput = `${state.a} ${state.operator} ${tempSqrtB} =`;
+  } else {
+    displayInput = `${displayTop.value} ${state.b} =`;
+  }
 
   item.innerHTML = `
     <p class="input gray">${displayInput}</p>
@@ -46,30 +60,20 @@ const addHistory = function (output) {
   topSection.hidden = false;
 };
 
-const separateDisplayTop = function () {
-  // Using this weird split because:
-  // with some operations (like √),
-  // the values in the state variables are different from displayTop.value.
-  // For clarity to the user, we rely on displayTop.value instead.
-
-  const parts = displayTop.value.split(" ");
-  a = Number(parts[0]);
-  b = Number(state.b);
-  
-  let displayInput = "";
-
-  if (parts.length > 2) {
-    displayInput = `${a} ${state.operator} ${parts[2]} =`;  // other operations
+const updateDisplayTop = function () {
+  if (displayTop.value === "") {
+    displayTop.value = `${state.a} ${state.operator}`.replace(/null/g, "");
   } else {
-    displayInput = `${a} ${state.operator} ${b} =`; // basic operations
+    const parts = displayTop.value.split(" ");
+
+    parts[1] = state.operator === "**" ? "^" : state.operator;
+
+    displayTop.value = parts.join(" ");
   }
-
-  return displayInput;
-};
-
-const updateDisplay = function () {
-  displayTop.value = `${state.a} ${state.operator}`.replace(/null/g, "");
-  displayBottom.value = state.currentInput ?? "0";
+  
+  if (state.a === null) {
+    displayTop.value = "";
+  }
 };
 
 const handleNumber = function (input) {
@@ -101,28 +105,69 @@ const handleNumber = function (input) {
 };
 
 const handleOperator = function (input) {
-  if (state.a === null) {
-    state.a = state.currentInput === null ? 0 : state.currentInput;
+  if (state.a === null && state.currentInput !== null) {
+    state.a = state.currentInput === null ? 0 : Number(state.currentInput);
     state.currentInput = null;
-  } else {
-    state.b = state.currentInput;
+  } else if (state.a !== null && state.currentInput !== null) {
+    state.b = Number(state.currentInput);
     state.currentInput = null;
   }
 
   if (state.b !== null) {
+    let tempSqrtA = state.tempSqrtA;
+    let tempSqrtB = state.tempSqrtB;
     const output = operate(state);
-    addHistory(output);
-
+    addHistory(output, tempSqrtA, tempSqrtB);
+    state.a = output;
+    state.operator = input;
+    
     displayTop.value = `${output} ${input}`;
+    updateDisplayTop();
     displayBottom.value = output;
 
-    state.a = output;
     state.b = null;
-    state.operator = input;
     state.currentInput = null;
   } else {
     state.operator = input;
     displayTop.value = `${state.a} ${input}`;
+    updateDisplayTop();
+  }
+};
+
+const handleOtherOperator = function (input) {
+  switch (input) {
+    case "%":
+      if (state.operator === null) return;
+
+      if (state.operator === "+" || state.operator === "-") {
+        state.currentInput = (state.a * (state.currentInput / 100)).toString();
+        displayBottom.value = state.currentInput;
+      } else if (state.operator === "*" || state.operator === "/") {
+        state.currentInput = (state.currentInput / 100).toString();
+        displayBottom.value = state.currentInput;
+      }
+      break;
+  
+    case "sqrt":
+      if (state.currentInput === null) return;
+
+      displayBottom.value = Math.sqrt(state.currentInput);
+      
+      if (state.a === null) {
+        state.tempSqrtA = `√(${state.currentInput})`;
+        displayTop.value += state.tempSqrtA;
+        state.a = displayBottom.value;
+        state.currentInput = null;
+      } else {
+        state.tempSqrtB = `√(${state.currentInput})`;
+        displayTop.value += ` ${state.tempSqrtB}`;
+        state.b = displayBottom.value;
+        state.currentInput = displayBottom.value;
+      }
+      break;
+
+    default:
+      break;
   }
 };
 
@@ -134,10 +179,13 @@ const handleFunction = function (input) {
       // state.operator will always have a value. ( Refers to handleOperator() )
       if (state.a !== null && state.currentInput !== null) {
         state.b = state.currentInput;
+        let tempSqrtA = state.tempSqrtA;
+        let tempSqrtB = state.tempSqrtB;
         const output = operate(state);
-        addHistory(output);
+        addHistory(output, tempSqrtA, tempSqrtB);
 
-        displayTop.value = separateDisplayTop();
+        displayTop.value = `${state.a} ${state.operator} ${state.b} =`;
+        updateDisplayTop();
         displayBottom.value = output;
 
         state.a = output;
@@ -171,12 +219,16 @@ const handleFunction = function (input) {
         } else {
           state.currentInput = null;
         }
-        updateDisplay();
+        displayTop.value = state.a ?? "a";
+        updateDisplayTop();
+        displayBottom.value = state.currentInput ?? "0";
         break;
 
       case "clear-entry":
         state.currentInput = null;
-        updateDisplay();
+        displayTop.value = state.a ?? "a";
+        updateDisplayTop();
+        displayBottom.value = "0";
         break;
 
       case "all-clear":
@@ -184,7 +236,8 @@ const handleFunction = function (input) {
         state.b = null;
         state.operator = null;
         state.currentInput = null;
-        updateDisplay();
+        updateDisplayTop();
+        displayBottom.value = "0";
         break;
   
     default:
@@ -201,6 +254,8 @@ btnCalculator.addEventListener("click", (event) => {
     handleNumber(target.id);
   } else if (target.matches(".operator")) {
     handleOperator(target.id);
+  } else if (target.matches(".other-operator")) {
+    handleOtherOperator(target.id);
   } else if (target.matches(".function")) {
     handleFunction(target.id);
   }
