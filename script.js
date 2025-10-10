@@ -71,9 +71,27 @@ const updateDisplayTop = function () {
     displayTop.value = `${state.a} ${state.operator}`.replace(/null/g, "");
   } else {
     const parts = displayTop.value.split(" ");
+    let operator = "";
 
-    parts[1] = state.operator === "**" ? "^" : state.operator;
+    switch (state.operator) {
+      case "*":
+        operator = "×";
+        break;
 
+      case "/":
+        operator = "÷";
+        break;
+
+      case "**":
+        operator = "^";
+        break;
+
+      default:
+        operator = state.operator;
+        break;
+    }
+
+    parts[1] = operator;
     displayTop.value = parts.join(" ");
   }
   
@@ -287,4 +305,66 @@ btnHistoryClear.addEventListener("click", () => {
   
   list.replaceChildren();
   topSection.hidden = true;
+});
+
+document.addEventListener("keydown", (event) => {
+  const input = event.key;
+  
+  switch (input) {
+    case "0":
+    case "1":
+    case "2":
+    case "3":
+    case "4":
+    case "5":
+    case "6":
+    case "7":
+    case "8":
+    case "9":
+    case ".":
+      handleNumber(input);
+      break;
+
+    case "+":
+    case "-":
+    case "*":
+    case "/":
+      handleOperator(input);
+      break;
+
+    case "^":
+      handleOperator("**");
+      break;
+
+    case "%":
+      handleOtherOperator(input);
+      break;
+    case "r": // root
+      handleOtherOperator("sqrt");
+      break;
+
+    case "=":
+    case "Enter":
+      handleFunction("=");
+      break;
+
+    case "n": // negative
+      handleFunction("toggle-negative");
+      break;
+
+    case "Backspace":
+      handleFunction("backspace");
+      break;
+
+    case "Escape":
+      handleFunction("all-clear");
+      break;
+
+    case "c":
+      handleFunction("clear-entry");
+      break;
+
+    default:
+      break;
+  }
 });
