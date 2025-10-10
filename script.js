@@ -4,8 +4,8 @@ const btnCalculator = document.querySelector(".buttons");
 const btnHistoryClear = document.querySelector(".trash");
 
 const state = {
-  "a": null,  // string when first time assigned from currentInput, then becomes a number after operate()
-  "b": null,  // string (becomes null immediately after each operation)
+  "a": null,  // number (TBH string will do, operate() will make sure it's a number)
+  "b": null,  // number (TBH string will do, operate() will make sure it's a number)
   "operator": null, // string
   "currentInput": null, // string
   "tempSqrtA": null,  // string
@@ -32,7 +32,13 @@ const operate = function (state) {
 
   state.tempSqrtA = null;
   state.tempSqrtB = null;
-  return methods[state.operator](a, b);
+
+  output = methods[state.operator](a, b);
+
+  if (Math.abs(output) > 1e-16 && Math.abs(output) < 1e16) {
+    return Number(output.toPrecision(16));
+  }
+  return output.toExponential(8);
 };
 
 const addHistory = function (output, tempSqrtA = null, tempSqrtB = null) {
@@ -53,7 +59,7 @@ const addHistory = function (output, tempSqrtA = null, tempSqrtB = null) {
 
   item.innerHTML = `
     <p class="input gray">${displayInput}</p>
-    <p class="output">${output}</p>
+    <p class="output">${addDelimiter(`${output}`)}</p>
   `;
   list.insertBefore(item, list.firstChild);
 
@@ -76,6 +82,23 @@ const updateDisplayTop = function () {
   }
 };
 
+const addDelimiter = function (num) {
+  // If we add delimiter directly into a decimal number,
+  // we will have unwanted result on the decimal number
+  const parts = num.split(".");
+  parts[0] = Number(parts[0]).toLocaleString("en-US");
+
+  if (parts.length > 1) {
+    return parts.join(".");
+  }
+
+  return parts[0];
+};
+
+const clearDelimiter = function (num) {
+  return num.replace(/,/g, "");
+};
+
 const handleNumber = function (input) {
   if (state.a !== null && state.operator === null && state.currentInput === null) {
     // operate() was triggered by "=" and user immediately enters a new number
@@ -85,10 +108,10 @@ const handleNumber = function (input) {
 
   if (state.currentInput !== null) {
     if (input === "." && state.currentInput.includes(".")) return; // only one dot
-    if (state.currentInput.replace(/\./g, "").length >= 16) return; // max 16 digit
+    if (state.currentInput.replace(/\./g, "").length >= 15) return; // max 15 digit
   }
 
-  if (input === "." && state.currentInput === null) {
+  if (input === "." && (state.currentInput === null || state.currentInput === "0")) {
     state.currentInput = "0.";
   } else if (input === "0" && state.currentInput === null) {
     state.currentInput = "0";
@@ -97,11 +120,8 @@ const handleNumber = function (input) {
     input :
     `${state.currentInput}${input}`.replace("null", "");
   }
-  // If the data type is a number, we can’t store the input as "0.123", it will always become ".123". Idk why.
-  // Also since the inputs behave more like string (typed digit by digit and concatenated),
-  // so we store them as strings anyway.
 
-  displayBottom.value = state.currentInput;
+  displayBottom.value = addDelimiter(state.currentInput);
 };
 
 const handleOperator = function (input) {
@@ -123,7 +143,7 @@ const handleOperator = function (input) {
     
     displayTop.value = `${output} ${input}`;
     updateDisplayTop();
-    displayBottom.value = output;
+    displayBottom.value = addDelimiter(`${output}`);
 
     state.b = null;
     state.currentInput = null;
@@ -141,28 +161,28 @@ const handleOtherOperator = function (input) {
 
       if (state.operator === "+" || state.operator === "-") {
         state.currentInput = (state.a * (state.currentInput / 100)).toString();
-        displayBottom.value = state.currentInput;
       } else if (state.operator === "*" || state.operator === "/") {
         state.currentInput = (state.currentInput / 100).toString();
-        displayBottom.value = state.currentInput;
       }
+
+      displayBottom.value = addDelimiter(`${state.currentInput}`);
       break;
   
     case "sqrt":
       if (state.currentInput === null) return;
 
-      displayBottom.value = Math.sqrt(state.currentInput);
+      displayBottom.value = addDelimiter(`${Math.sqrt(state.currentInput)}`);
       
       if (state.a === null) {
         state.tempSqrtA = `√(${state.currentInput})`;
         displayTop.value += state.tempSqrtA;
-        state.a = displayBottom.value;
+        state.a = Number(clearDelimiter(displayBottom.value));
         state.currentInput = null;
       } else {
         state.tempSqrtB = `√(${state.currentInput})`;
         displayTop.value += ` ${state.tempSqrtB}`;
-        state.b = displayBottom.value;
-        state.currentInput = displayBottom.value;
+        state.b = Number(clearDelimiter(displayBottom.value));
+        state.currentInput = clearDelimiter(displayBottom.value);
       }
       break;
 
@@ -178,7 +198,7 @@ const handleFunction = function (input) {
       // if state.a and state.currentInput are set,
       // state.operator will always have a value. ( Refers to handleOperator() )
       if (state.a !== null && state.currentInput !== null) {
-        state.b = state.currentInput;
+        state.b = Number(state.currentInput);
         let tempSqrtA = state.tempSqrtA;
         let tempSqrtB = state.tempSqrtB;
         const output = operate(state);
@@ -186,7 +206,7 @@ const handleFunction = function (input) {
 
         displayTop.value = `${state.a} ${state.operator} ${state.b} =`;
         updateDisplayTop();
-        displayBottom.value = output;
+        displayBottom.value = addDelimiter(`${output}`);
 
         state.a = output;
         state.b = null;
@@ -208,8 +228,8 @@ const handleFunction = function (input) {
           state.a = state.currentInput;
         }
 
-        displayBottom.value = Number(displayBottom.value) * -1;
-        state.currentInput = displayBottom.value
+        displayBottom.value = addDelimiter(`${Number(clearDelimiter(displayBottom.value)) * -1}`);
+        state.currentInput = clearDelimiter(displayBottom.value);
       }
       break;
 
@@ -221,7 +241,7 @@ const handleFunction = function (input) {
         }
         displayTop.value = state.a ?? "a";
         updateDisplayTop();
-        displayBottom.value = state.currentInput ?? "0";
+        displayBottom.value = state.currentInput ? addDelimiter(state.currentInput) : "0";
         break;
 
       case "clear-entry":
